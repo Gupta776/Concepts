@@ -1,0 +1,585 @@
+# Using MongoDB Aggregation Stages with Python: $match and $group
+
+Review the following code, which demonstrates how to use the `$match` and `$group` stages in a MongoDB aggregation pipeline by using PyMongo.
+
+## 
+
+## Using $match
+
+When we build queries by using the aggregation framework, each stage transforms or organizes data in a specific way. In this lesson, we used the `$match` and `$group` stages.
+
+Use the `$match` operator to select documents that match the specified query condition(s) and pass the matching documents to the next stage. `$match` takes a document that specifies the query.
+
+`$match` should be placed early in a pipeline to reduce the number of documents that will be processed later in the pipeline.
+
+Here's an example of the `$match` stage:
+
+```
+# Select accounts with balances of less than $1000.
+select_by_balance = {"$match": {"balance": {"$lt": 1000}}}
+```
+
+## 
+
+## Using $group
+
+Use the `$group` stage to separate documents into groups. The `$group` stage must have an `_id` field that specifies the group key. The group key is preceded by a `$` and enclosed in quotation marks.
+
+A `$group` stage can include additional field(s) that are computed by using accumulator operators, such as `$avg`.
+
+Here's an example of the `$group` stage:
+
+```
+# Separate documents by account type and calculate the average balance for each account type.
+separate_by_account_calculate_avg_balance = {
+    "$group": {"_id": "$account_type", "avg_balance": {"$avg": "$balance"}}
+}
+```
+
+## 
+
+## Aggregation Example That Uses $match and $group
+
+The following is an example of an aggregation pipeline that uses `$match` and `$group`.
+
+```
+# Connect to MongoDB cluster with MongoClient
+client = MongoClient(MONGODB_URI)
+
+# Get reference to 'bank' database
+db = client.bank
+
+# Get reference to 'accounts' collection
+accounts_collection = db.accounts
+
+# Calculate the average balance of checking and savings accounts with balances of less than $1000.
+
+# Select accounts with balances of less than $1000.
+select_by_balance = {"$match": {"balance": {"$lt": 1000}}}
+
+# Separate documents by account type and calculate the average balance for each account type.
+separate_by_account_calculate_avg_balance = {
+    "$group": {"_id": "$account_type", "avg_balance": {"$avg": "$balance"}}
+}
+
+# Create an aggegation pipeline using 'stage_match_balance' and 'stage_group_account_type'.
+pipeline = [
+    select_by_balance,
+    separate_by_account_calculate_avg_balance,
+]
+
+# Perform an aggregation on 'pipeline'.
+results = accounts_collection.aggregate(pipeline)
+
+print()
+print(
+    "Average balance of checking and savings accounts with balances of less than $1000:", "\n"
+)
+
+for item in results:
+    pprint.pprint(item)
+
+client.close()
+```
+
+—
+
+---
+
+**You want to find airbnb listings for an entire home or apartment, grouped by the number of bedrooms and the average price. Given the sample document from the `listingsAndReviews` collection below, which of the following options should you use as the first pipeline stage? (Select one.)**
+
+```jsx
+{
+  "_id": "10116256",
+  "listing_url": "https://www.airbnb.com/rooms/10116256",
+  "name": "GOLF ROYAL RESIDENCE SUİTES(2+1)-2",
+  "summary": "A BIG BED ROOM WITH A BIG SALOON INCLUDING A NICE BALAKON TO HAVE SOME FRESH AIR . OUR RESIDENCE SITUATED AT THE CENTRE OF THE IMPORTANT MARKETS SUCH AS NİŞANTAŞİ,OSMANBEY AND TAKSIM SQUARE,",
+
+....
+  "room_type": "Entire home/apt",
+  ...
+  "bedrooms": 2,
+...
+   "price": {
+    "$numberDecimal": "997.00"
+  }}
+
+```
+
+**A.**
+
+```json
+{"$group": {"_id": "$bedrooms", "avg_price": {"$avg": "$price"}}
+```
+
+**B.**
+
+```json
+{"$match": {"room_type": "Entire home/apt"}}
+```
+
+**C.**
+
+```json
+ {"$group": {"room_type": "Entire home/apt"}}
+```
+
+**D.**
+
+```json
+{"$match": {"bedrooms": "price"}}
+```
+
+Correct Answer
+
+- **A.** Option A
+    
+    Incorrect. First, you should use a `$match` stage to match all documents with a room type of "Entire home/apt."
+    
+- **B.** Option BYour Answer:
+    
+    Correct
+    
+    Correct! First, you'll use a `$match` stage to match all documents with a room type of "Entire home/apt."
+    
+- **C.** Option C
+    
+    Incorrect. To find all documents with a room type of "Entire home/apt" you should use a `$match` stage.
+    
+- **D.** Option D
+    
+    Incorrect. You should begin the pipeline by using a `$match` stage to match all documents with a room type of "Entire home/apt."
+    
+
+---
+
+**You are building an aggregation pipeline to find airbnb listings for an entire home or apartment, grouped by the number of bedrooms and the average price. You have successfully built the first `$match` stage, as seen below. Which option below will allow you to complete the pipeline in a second stage? (Select one.)**
+
+```
+# Calculate the average price by number of bedrooms for every listing which is an entire home or apartment.
+
+# Select listings for the entire home or apartment.
+entire_home = {"$match": {"room_type": "Entire home/apt"}}
+
+# Separate documents by number of bedrooms and calculate the average price.
+avg_price_by_bedrooms =
+
+# Create an aggegation pipeline using 'stage_match_balance' and 'stage_group_account_type'.
+pipeline = [
+    entire_home,
+    avg_price_by_bedrooms,
+]
+
+# Perform an aggregation on 'pipeline'.
+results = listingsAndReviews_collection.aggregate(pipeline)
+
+```
+
+**A.**
+
+```json
+{"$group": {"_id": "$bedrooms", "avg_price": {"$avg": "$price"}}}
+```
+
+**B.**
+
+```json
+{"$match": {"room_type": "Entire home/apt"}}
+```
+
+**C.**
+
+```json
+{"$group": {"_id": "$price", "avg_price": {"$avg": "$bedrooms"}}
+```
+
+**D.**
+
+```json
+{"$match": {"bedrooms": "price"}}
+```
+
+Correct Answer
+
+- **A.** Option AYour Answer:
+    
+    Correct
+    
+    Correct! You have used the `$group` stage to group the returned documents by number of bedrooms, then identified the average price.
+    
+- **B.** Option B
+    
+    Incorrect. This is the first stage of the pipeline. In the second stage, you must group the returned documents by number of bedrooms, then identify the average price.
+    
+- **C.** Option C
+    
+    Incorrect. This `$group` stage would group documents by price, then determine the average number of bedrooms. Instead, you must group the returned documents by number of bedrooms, then identify the average price.
+    
+- **D.** Option D
+    
+    Incorrect. You should use a `$group` stage to group the documents by number of bedrooms, then determine the average price.
+    
+
+---
+
+# Using MongoDB Aggregation Stages with Python: $sort and $project
+
+Review the following code, which demonstrates how to use the `$sort` and `$project` stages in a MongoDB aggregation pipeline by using PyMongo.
+
+## 
+
+## Using $sort
+
+When we build queries by using the aggregation framework, each stage transforms or organizes data in a specific way. In this lesson, we focused on the `$sort` and `$project` stages.
+
+Use the `$sort` operator to organize the input documents in ascending or descending order. `$sort` takes a document that specifies the field(s) to sort by and the respective sort order. To sort in ascending order, use the value of 1. For descending order, use the value of -1.
+
+Here's an example of a `$sort` stage:
+
+```
+# Organize documents in order from highest balance to lowest.
+organize_by_original_balance = {"$sort": {"balance": -1}}
+```
+
+## 
+
+## Using $project
+
+Use the `$project` stage to specify the fields returned by the aggregation. `$project` can be used to include or exclude existing fields by setting a field to 1 to include or 0 to exclude. It can also be used to add new fields or reset the value of existing fields.
+
+To add a new field by using `$project`, specify the field name and set its value to an expression like this: `<field>`: `<expression>`. In this example, the new field name is `gbp_balance`. The expression contains the `$divide` arithmetic operator, the `$balance` field reference, and the `conversion_rate_usd_to_gbp` variable.
+
+When creating an aggregation pipeline, the `$project` stage should usually be the last stage in a pipeline because it specifies the exact fields to be returned to the client.
+
+Here's an example of a `$project` stage:
+
+```
+# Return only the account type & balance fields, plus a new field containing balance in Great British Pounds (GBP).
+return_specified_fields = {
+    "$project": {
+        "account_type": 1,
+        "balance": 1,
+        "gbp_balance": {"$divide": ["$balance", conversion_rate_usd_to_gbp]},
+        "_id": 0,
+    }
+}
+```
+
+## 
+
+## Aggregation Example That Uses $match, $sort, and $project
+
+The following is an example of an aggregation pipeline that uses `$match`, `$sort`, and `$project`:
+
+```
+# Connect to MongoDB cluster with MongoClient
+client = MongoClient(MONGODB_URI)
+
+# Get reference to 'bank' database
+db = client.bank
+
+# Get a reference to the 'accounts' collection
+accounts_collection = db.accounts
+
+# Return the account type, original balance, and balance converted to Great British Pounds (GBP)
+# of all checking accounts with an original balance of greater than $1,500 US dollars, in order from highest original balance to lowest.
+
+# To calculate the balance in GBP, divide the original balance by the conversion rate
+conversion_rate_usd_to_gbp = 1.3
+
+# Select checking accounts with balances of more than $1,500.
+select_accounts = {"$match": {"account_type": "checking", "balance": {"$gt": 1500}}}
+
+# Organize documents in order from highest balance to lowest.
+organize_by_original_balance = {"$sort": {"balance": -1}}
+
+# Return only the account type & balance fields, plus a new field containing balance in Great British Pounds (GBP).
+return_specified_fields = {
+    "$project": {
+        "account_type": 1,
+        "balance": 1,
+        "gbp_balance": {"$divide": ["$balance", conversion_rate_usd_to_gbp]},
+        "_id": 0,
+    }
+}
+
+# Create an aggegation pipeline containing the four stages created above
+pipeline = [
+    select_accounts,
+    organize_by_original_balance,
+    return_specified_fields,
+]
+
+# Perform an aggregation on 'pipeline'.
+results = accounts_collection.aggregate(pipeline)
+
+print(
+    "Account type, original balance and balance in GDP of checking accounts with original balance greater than $1,500,"
+    "in order from highest original balance to lowest: ", "\n"
+)
+
+for item in results:
+    pprint.pprint(item)
+
+client.close()
+```
+
+---
+
+**You've written an aggregation pipeline that matches all airbnb listings for entire homes, groups by number of bedrooms and determines the average price. Your final step in this pipeline is to return the results in ascending order, so the lowest average price is returned first. Given the code below, which option should you use to complete the sort stage? (Select one.)**
+
+```
+# Calculate the average price by number of bedrooms for every listing which is an entire home or apartment, then sort in ascending order.
+
+# Select listings for the entire home or apartment.
+entire_home = {"$match": {"room_type": "Entire home/apt"}}
+
+# Separate documents by number of bedrooms and calculate the average price.
+avg_price_by_bedrooms = {"$group": {"_id": "$bedrooms", "avg_price": {"$avg": "$price"}}
+
+# Sort in ascending order, to view the lowest average price first
+sort_ascending =
+
+# Create an aggegation pipeline using 'stage_match_balance' and 'stage_group_account_type'.
+pipeline = [
+    entire_home,
+    avg_price_by_bedrooms,
+   sort_ascending
+]
+
+# Perform an aggregation on 'pipeline'.
+results = listingsAndReviews_collection.aggregate(pipeline)
+
+```
+
+**A.**
+
+```json
+{"$limit": 1}
+```
+
+**B.**
+
+```json
+{"$sort": {"avg_price": -1}
+```
+
+**C.**
+
+```json
+{"$sort": {"avg_price": 1}
+```
+
+**D.**
+
+```json
+{"$project" : {"avg_price" : 1}
+```
+
+Correct Answer
+
+- **A.** Option A
+    
+    Incorrect. This limit stage would return one result. Instead, you should use a `$sort` stage to return results in ascending order.
+    
+- **B.** Option B
+    
+    Incorrect. This `$sort` stage will return results in descending order. To return results in ascending order, use 1.
+    
+- **C.** Option CYour Answer:
+    
+    Correct
+    
+    Correct! This `$sort` stage would return results in ascending order.
+    
+- **D.** Option D
+    
+    Incorrect. This `$project` stage would return only the `avg_price` field for each document. Instead, you should use a `$sort` stage to return results in ascending order.
+    
+
+—
+
+**You've identified that you want to stay in an entire home with 3 bedrooms. In this new pipeline, you need to add one stage that does the following:**
+
+- **return the description and listing_url fields**
+- **calculate a new total_price field that adds the price and cleaning fee**
+- **suppress the _id field**
+
+**Which option below will complete the second stage? (Select one.)**
+
+```
+# Select listings for an entire home with 3 bedrooms. Return the description, listing url,calculate the total price (price + cleaning fee), and suppress the _id field.
+
+# Select listings for the entire home or apartment.
+entire_home = {"$match": {"room_type": "Entire home/apt", "bedrooms": 3}}
+
+# Return the description, listing url, calculate the total price (price + cleaning fee), and suppress the _id field.
+return_listings =
+
+# Create an aggegation pipeline using 'stage_match_balance' and 'stage_group_account_type'.
+pipeline = [
+    entire_home,
+   return_listings
+]
+
+# Perform an aggregation on 'pipeline'.
+results = listingsAndReviews_collection.aggregate(pipeline)
+
+```
+
+**A.**
+
+```json
+{"$project": {"description": 1,"listing_url": 1,"_id": 0,"total_price": {"$sum": ["$price", "$cleaning_fee"]}}}
+
+```
+
+**B.**
+
+```scss
+{"$project": { description: 0,listing_url: 0}}
+```
+
+**C.**
+
+```scss
+ {"$return": {description: 1,listing_url: 1,_id: 0,total_price: {$sum: ['$price', '$cleaning_fee']}}}
+
+```
+
+**D.**
+
+```scss
+{"$return": { description:0 ,listing_url: 0}}
+```
+
+Correct Answer
+
+- **A.** Option AYour Answer:
+    
+    Correct
+    
+    Correct! This `$project` stage returns the description and `listing_url`. It calculates a new field, `total_price` that sums the price and cleaning fee. Finally, it excluded the `_id` field from the output.
+    
+- **B.** Option B
+    
+    Incorrect.This `$project` stage returns all fields except the `description` and `listing_url`. Use 1 to indicate that a field should be returned.
+    
+- **C.** Option C
+    
+    Incorrect. `$return` is not a valid aggregation stage. To return selected fields, use the `$project` stage.
+    
+- **D.** Option D
+    
+    Incorrect. `$return` is not a valid aggregation stage. To return selected fields, use the `$project` stage
+    
+
+---
+
+More info:
+
+Aggregation is a powerful language for filerign, sorting, grouping and projecting data without changing the data in your actual collection
+
+Stages: Aggregation pipeline
+
+some more: $unwind, $bucket.
+
+***PyMongoArrow contains tools for data analysis use cases. You can easily import data into MongoDB  from Apache arrow tables, Pandas DataFrames, NumPy arrays, csv, or
+Parquet files.***
+
+***Motor is the official asynchronous Python driver for MongoDB.***
+
+***MongoEngine is a community-maintained Python Object Document Mapper, or ODM, built on top of PyMongo.***
+
+---
+
+# MongoDB Aggregation with Python
+
+In this unit, you learned how to:
+
+- Define aggregation and the components of an aggregation pipeline.
+- Build an aggregation pipeline that uses the `$match` and `$group` stages.
+- Build an aggregation pipeline that uses the `$sort` and `$project` stages.
+
+## 
+
+## Resources
+
+Use the following resources to learn more about performing aggregation with Python:
+
+### Lesson 01: Building a MongoDB Aggregation Pipeline in Python Applications
+
+- [Aggregation Operations](https://www.mongodb.com/docs/manual/aggregation/?_ga=2.59215460.810066485.1665291537-836515500.1666025886)
+- [Getting Started with Aggregation Pipelines in Python](https://www.mongodb.com/developer/languages/python/python-quickstart-aggregation/?_ga=2.59215460.810066485.1665291537-836515500.1666025886)
+- [Aggregation Examples](https://pymongo.readthedocs.io/en/stable/examples/aggregation.html)
+- [Practical MongoDB Aggregations Book](https://www.practical-mongodb-aggregations.com/)
+
+### Lesson 02: Using MongoDB Aggregation Stages with Python: $match and $group
+
+- [$match](https://www.mongodb.com/docs/manual/reference/operator/aggregation/match/?_ga=2.26136564.810066485.1665291537-836515500.1666025886)
+- [$group](https://www.mongodb.com/docs/manual/reference/operator/aggregation/group/?_ga=2.26136564.810066485.1665291537-836515500.1666025886)
+
+### Lesson 03: Using MongoDB Aggregation Stages with Python: $sort and $project
+
+- [$sort](https://www.mongodb.com/docs/manual/reference/operator/aggregation/sort/?_ga=2.26136564.810066485.1665291537-836515500.1666025886)
+- [$project](https://www.mongodb.com/docs/manual/reference/operator/aggregation/project/?_ga=2.26136564.810066485.1665291537-836515500.1666025886)
+
+
+
+
+
+
+
+
+Question:
+
+Course name: Mangodb  aggregation in Python
+
+Q) 
+
+**What is the aggregation framework used for? (Select one.)**
+
+- **A.** To process documents and return computed results.
+    
+    Correct Answer
+    
+    Correct! Aggregation operations process documents and return computed results. When working with data in MongoDB, you may need to quickly gather metrics for a project by running complex operations that include multiple stages of operations. Generating reports and displaying useful metadata are just two major use cases where MongoDB aggregation operations can prove incredibly useful, powerful, and flexible.
+    
+
+Q)
+
+**Which component(s) of an aggregation pipeline do documents pass through for processing in sequence? (Select one.)**
+
+- **A.** Aggregation stagesYour Answer:
+    
+    Correct
+    
+    Correct! An aggregation pipeline consists of one or more stages that process documents. Each stage performs an operation on the input documents. For example, a stage can filter documents, group documents, or calculate values.
+    
+
+—
+
+- Aggregation operators
+    
+    Incorrect. Aggregation operators construct expressions to be used in the aggregation pipeline stages. Operator expressions are similar to functions that take arguments. Which component(s) of an aggregation pipeline do documents pass through for processing?
+    
+- **C.** The db.collection.aggregate() command
+    
+    Incorrect. The `db.collection.aggregate()` command accepts a sequence of aggregation operations or stages as a pipeline. Which component(s) of an aggregation pipeline do documents pass through for processing?
+    
+- **.** To create database schemas.
+    
+    Incorrect. Aggregation does not help with data modeling and creating schemas. How can we analyze data without changing data in the collection?
+    
+- **C.** To create basic CRUD commands.Your Answer:
+    
+    Incorrect
+    
+    Incorrect. The aggregation framework is not typically used to create basic CRUD commands. How can we analyze data without changing data in the collection?
+    
+- **D.** To create serverless functions.
+    
+    Incorrect. The aggregation framework is not used to create serverless functions. How can we analyze data without changing data in the collection?
+    
+
+—
