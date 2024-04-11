@@ -2,7 +2,7 @@
 
 Review the following code, which demonstrates how to use the `$match` and `$group` stages in a MongoDB aggregation pipeline by using PyMongo.
 
-## 
+#
 
 ## Using $match
 
