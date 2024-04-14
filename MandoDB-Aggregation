@@ -115,7 +115,7 @@ client.close()
 **B.**
 
 ```json
-{"$match": {"room_type": "Entire home/apt"}}
+{"$match": {"room_type": "Entire home/apt" }}
 ```
 
 **C.**
