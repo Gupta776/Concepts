@@ -10,7 +10,7 @@ When we build queries by using the aggregation framework, each stage transforms 
 
 Use the `$match` operator to select documents that match the specified query condition(s) and pass the matching documents to the next stage. `$match` takes a document that specifies the query.
 
-`$match` should be placed early in a pipeline to reduce the number of documents that will be processed later in the pipeline.
+`$match` should be placed early in a pipeline to reduce the number of documents that will be processed later in the pipeline.  
 
 Here's an example of the `$match` stage:
 
